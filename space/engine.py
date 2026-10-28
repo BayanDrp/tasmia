@@ -11,12 +11,13 @@ import json
 import subprocess
 import tempfile
 import threading
-import unicodedata
 from collections import OrderedDict
 
 import numpy as np
 import soundfile as sf
 import torch
+from config import MAX_AUDIO_SECONDS  # local module, shared with app.py
+from tasmia_core.normalize import merge_chunk_texts  # vendored core (pure stdlib)
 from huggingface_hub import hf_hub_download
 from peft import PeftModel
 from transformers import (
@@ -32,9 +33,7 @@ ENGINE_ALIASES = {
     "quick": "rabah2026/wav2vec2-large-xlsr-53-arabic-quran-v_final",
     "warsh": "Dr-pisto/tahkik-warsh-medium-lora",
 }
-DEFAULT_MODEL_ALIAS = "quick"
 
-MAX_AUDIO_SECONDS = 180
 MAX_CHUNK_SECONDS = 20
 CHUNK_OVERLAP_SECONDS = 1
 SILENCE_RMS = 0.003           # near-silent windows are skipped (no hallucination basis)
@@ -214,38 +213,6 @@ def split_audio(audio, sample_rate):
     return chunks
 
 
-def _normalize_overlap_word(word):
-    decomposed = unicodedata.normalize("NFD", word)
-    return "".join(
-        char
-        for char in decomposed
-        if not unicodedata.category(char).startswith(("M", "P", "Z", "C"))
-    )
-
-
-def join_chunk_texts(texts):
-    """Join adjacent chunk transcripts while removing repeated seam words."""
-    merged: list[str] = []
-
-    for text in texts:
-        words = text.split()
-        if not words:
-            continue
-
-        max_overlap = min(len(merged), len(words), 12)
-        overlap = 0
-        for size in range(max_overlap, 0, -1):
-            left = [_normalize_overlap_word(word) for word in merged[-size:]]
-            right = [_normalize_overlap_word(word) for word in words[:size]]
-            if left == right and all(left):
-                overlap = size
-                break
-
-        merged.extend(words[overlap:])
-
-    return " ".join(merged)
-
-
 def _forward_chunk(chunk, sample_rate, engine, language):
     kind, processor, model = engine
     device = next(model.parameters()).device
@@ -293,7 +260,7 @@ def transcribe_transcript(audio_path: str, model_id: str, language: str = "ar"):
             continue
         texts.append(_forward_chunk(chunk, sample_rate, engine, language))
 
-    text = join_chunk_texts(texts)
+    text = merge_chunk_texts(texts)
     if not text:
         raise ValueError("لم أتمكن من تمييز كلام واضح في التسجيل.")
 

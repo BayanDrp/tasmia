@@ -37,13 +37,11 @@ import time  # noqa: E402
 
 import gradio as gr  # noqa: E402
 import spaces  # noqa: E402
+from config import DEFAULT_MODEL_ALIAS, MAX_AUDIO_SECONDS  # noqa: E402
 from fastapi import File, Form, UploadFile  # noqa: E402
 from fastapi.responses import JSONResponse, RedirectResponse  # noqa: E402
 from gradio import Server  # noqa: E402
 from starlette.concurrency import run_in_threadpool  # noqa: E402
-
-DEFAULT_MODEL_ALIAS = "quick"  # kept in sync with engine.ENGINE_ALIASES
-MAX_AUDIO_SECONDS = 180
 
 GPU_DURATION_SECONDS = 120  # cold >3 GB loads may still exceed; retried calls hit cache
 
