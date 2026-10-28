@@ -145,12 +145,35 @@ def display_tokens(text: str) -> list[str]:
 def tokenize(text: str) -> list[str]:
     return [token for token in text.split() if token]
 
+
 def normalize(text: str) -> str:
     """Backward-compatible alias for normalize_text()."""
     return normalize_text(text)
 
 
+def merge_chunk_texts(texts: list[str]) -> str:
+    """Join chunk transcripts while removing repeated seam words.
 
+    Chunked ASR with overlapping windows repeats the words that fall in the
+    overlap; the join drops the repetition by matching the longest normalized
+    run at the seam.
+    """
+    merged: list[str] = []
 
-    
+    for text in texts:
+        words = text.split()
+        if not words:
+            continue
 
+        max_overlap = min(len(merged), len(words), 12)
+        overlap = 0
+        for size in range(max_overlap, 0, -1):
+            left = [normalize_word(word) for word in merged[-size:]]
+            right = [normalize_word(word) for word in words[:size]]
+            if left == right and all(left):
+                overlap = size
+                break
+
+        merged.extend(words[overlap:])
+
+    return " ".join(merged)
