@@ -1,0 +1,5 @@
+torch
+transformers==5.20.2
+peft
+soundfile
+numpy
