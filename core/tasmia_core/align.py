@@ -494,6 +494,86 @@ def _mark_repetitions(
         )
 
 
+def _repair_heard_tokens(expected: list[Word], heard: list[HeardWord]) -> list[HeardWord]:
+    """Rescue ASR tokenization artifacts before alignment.
+
+    Two exact-match repairs, both guided by the mushaf:
+
+    * fusion: one heard token is the exact concatenation of two
+      consecutive expected words (the model forgot a space), e.g.
+      وِزْرَكَالَّذِي for وِزْرَكَ + الَّذِي -> split it back in two.
+    * split: two consecutive heard tokens concatenate to exactly one
+      expected word (the model inserted a space) -> merge them.
+
+    Only exact normalized concatenations trigger a repair, so genuine
+    mispronunciations pass through untouched.  A token whose normalized
+    form is itself a single expected word is never split: the single
+    word is the safer reading.
+    """
+    if not heard or not expected:
+        return list(heard)
+
+    expected_norm = [word.normalized or normalize_word(word.text) for word in expected]
+    single = {norm for norm in expected_norm if norm}
+
+    # normalized concat of two consecutive expected words -> their norms
+    fusion_of: dict[str, tuple[str, str]] = {}
+    for first, second in zip(expected_norm, expected_norm[1:]):
+        if first and second and (first + second) not in single:
+            fusion_of.setdefault(first + second, (first, second))
+
+    # display text of each expected norm (cosmetic; alignment uses norms)
+    display: dict[str, str] = {}
+    for word in expected:
+        display.setdefault(word.normalized or normalize_word(word.text), word.text)
+
+    repaired: list[HeardWord] = []
+    index = 0
+    while index < len(heard):
+        word = heard[index]
+        norm = word.normalized or normalize_word(word.text)
+        nxt = heard[index + 1] if index + 1 < len(heard) else None
+
+        if nxt is not None:
+            nxt_norm = nxt.normalized or normalize_word(nxt.text)
+            together = norm + nxt_norm
+            # two heard tokens, one expected word (and no rival reading)
+            if norm and nxt_norm and together in single and together not in fusion_of:
+                repaired.append(
+                    HeardWord(
+                        text=f"{word.text} {nxt.text}",
+                        normalized=together,
+                        start=word.start,
+                        end=nxt.end,
+                        probability=min(word.probability, nxt.probability),
+                    )
+                )
+                index += 2
+                continue
+
+        # one heard token, two expected words: both halves share the
+        # fused token's timing and probability.
+        parts = fusion_of.get(norm) if norm else None
+        if parts:
+            for part in parts:
+                repaired.append(
+                    HeardWord(
+                        text=display.get(part, part),
+                        normalized=part,
+                        start=word.start,
+                        end=word.end,
+                        probability=word.probability,
+                    )
+                )
+            index += 1
+            continue
+
+        repaired.append(word)
+        index += 1
+
+    return repaired
+
+
 def align(
     expected: list[Word],
     heard: list[HeardWord],
@@ -516,6 +596,8 @@ def align(
         raise ValueError("expected must contain at least one word")
 
     expected_words = list(expected)
+    heard = _repair_heard_tokens(expected_words, heard)
+
     expected_normalized, expected_weak = _prepare_expected(expected_words)
     heard_words, heard_normalized, heard_weak = _prepare_heard(heard)
 
