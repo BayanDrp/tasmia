@@ -177,3 +177,23 @@ def merge_chunk_texts(texts: list[str]) -> str:
         merged.extend(words[overlap:])
 
     return " ".join(merged)
+
+def collapse_repetition(text: str, max_repeat: int = 10) -> str:
+    """Collapse words repeated in a row beyond max_repeat.
+
+    ASR engines sometimes get stuck and emit one word hundreds of times
+    (whisper loops on trailing noise). Real recitation never contains one
+    word max_repeat times consecutively, so keeping the first max_repeat
+    copies of a run can never damage honest text.
+    """
+    words = text.split()
+    collapsed: list[str] = []
+    run = 0
+    for word in words:
+        if collapsed and word == collapsed[-1]:
+            run += 1
+        else:
+            run = 0
+        if run < max_repeat:
+            collapsed.append(word)
+    return " ".join(collapsed)

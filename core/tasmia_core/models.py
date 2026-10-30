@@ -9,7 +9,7 @@ from __future__ import annotations
 
 
 from dataclasses import dataclass
-
+from enum import Enum
 # ---------------------------------------------------------------------------
 # Status vocabulary
 # ---------------------------------------------------------------------------
@@ -53,6 +53,12 @@ def empty_counts() -> dict[str, int]:
 # ---------------------------------------------------------------------------
 # Input models
 # ---------------------------------------------------------------------------
+
+
+class kinds_checks(Enum):
+    with_tashkeel = "standard"
+    without_tashkeel = "remove_tashkeel"
+    with_warsh = "warsh"
 
 
 @dataclass(frozen=True, slots=True)

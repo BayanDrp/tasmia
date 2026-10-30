@@ -1,6 +1,6 @@
-"""Tasmia ASR engine layer - model resolution, caching and transcription.
+"""Tasmia ASR engine layer  model resolution, caching and transcription.
 
-Pure-PyTorch side of the Space: knows nothing about http/gradio, so it can
+Pure PyTorch side of the Space: knows nothing about http/gradio, so it can
 be reused by ai/app/pipeline.py or any local runner later.
 """
 
@@ -65,7 +65,7 @@ def _read_adapter_base(model_id: str) -> str | None:
 
 
 def load_engine(model_id: str):
-    """Load one ASR repo as a ready-to-use CPU engine, detecting its family."""
+    """Load one ASR repo as a ready to use CPU engine, detecting its family."""
     adapter_base = _read_adapter_base(model_id)
     config_id = adapter_base or model_id
 

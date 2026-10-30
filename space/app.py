@@ -1,29 +1,4 @@
-"""Tasmia - Warsh ASR: JSON API + demo UI (gradio.Server mode).
 
-    POST /api/transcribe         multipart: audio file + model/language form
-    POST /api/transcribe/json    {"audio_base64": ..., "model": ..., "language": ...}
-    POST /gradio_api/call/transcribe  queue/SSE fallback, body {"data": [b64, model]}
-    GET  /whoami                 diagnostics (loaded engines)
-    GET  /                       -> redirect to the demo UI
-    GET  /gradio                 -> Gradio demo UI
-    GET  /docs                   -> Swagger API docs
-
-    200 -> {"transcription", "model", "type", "elapsed_ms", "chunks", "audio_seconds"}
-    400 -> {"error": "..."}
-
-Server mode (gradio >= 6.10; the Space pins sdk 6.31.0):
-    * `app = Server(...)` - the conventional name the HF runner looks for.
-    * GRADIO_SSR_MODE is FORCED to False before importing gradio: the runner
-      sets it to true, and the Node/SvelteKit SSR proxy then shadows FastAPI
-      routes (pages, /docs, /openapi.json), rejects multipart POSTs without a
-      browser Origin ("Cross-site POST form submissions are forbidden"), and
-      answers unknown POST paths with its own "Method Not Allowed".
-    * There must be NO module-level `demo` Blocks: the runner auto-launches
-      such an instance itself (with SSR) instead of the Server. The UI is
-      built inside _build_demo() and only mounted at /gradio.
-    * Heavy imports (torch/transformers) are lazy so the server binds fast.
-    * Model logic lives in engine.py (kept gradio/http-free).
-"""
 
 from __future__ import annotations
 
@@ -48,7 +23,7 @@ GPU_DURATION_SECONDS = 120  # cold >3 GB loads may still exceed; retried calls h
 
 @spaces.GPU(duration=GPU_DURATION_SECONDS)
 def run_transcribe(audio_path: str, model_key: str, language: str = "ar") -> dict:
-    """One end-to-end transcription; the model stays on GPU between calls."""
+    """One end to end transcription; the model stays on GPU between calls."""
     from engine import resolve_model, transcribe_transcript  # lazy: heavy imports
 
     started = time.perf_counter()
@@ -102,7 +77,7 @@ async def api_transcribe_multipart(
 
 @app.post("/api/transcribe/json")
 async def api_transcribe_json(request_data: dict):
-    """Machine-to-machine variant (JSON body, base64 audio)."""
+    """Machine to machine variant (JSON body, base64 audio)."""
     audio_b64 = request_data.get("audio_base64")
     model = request_data.get("model", DEFAULT_MODEL_ALIAS)
     language = request_data.get("language", "ar")
@@ -167,7 +142,7 @@ async def redirect_home():
 
 # --------------------------------------------------------------------------
 # Demo UI - built in a function on purpose: a module-level Blocks would be
-# auto-launched by the HF runner instead of the Server (see module docstring).
+# auto launched by the HF runner instead of the Server (see module docstring).
 # --------------------------------------------------------------------------
 
 def _ui_transcribe(audio_path, model_key):
@@ -220,7 +195,7 @@ gr.mount_gradio_app(app, _build_demo(), path="/gradio")
 # --------------------------------------------------------------------------
 
 def _warm_default_engines():
-    """Pre-load the fast default engine on CPU at boot (outside GPU time)."""
+    """Pre load the fast default engine on CPU at boot (outside GPU time)."""
     thread = threading.Thread(target=_safe_warm, args=(DEFAULT_MODEL_ALIAS,), daemon=True)
     thread.start()
 
@@ -236,7 +211,7 @@ def _safe_warm(model_key):
 
 def _port_already_serving_our_app() -> bool:
     """True if another instance of THIS app already bound the port (the runner
-    sometimes double-starts; that must be benign, not RUNTIME_ERROR)."""
+    sometimes double starts; that must be benign, not RUNTIME_ERROR)."""
     import urllib.request
 
     port = os.getenv("GRADIO_SERVER_PORT", "7860")

@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tasmia-core"
+version = "0.1.0"
+description = "Pure stdlib core: normalization, alignment, scoring for Tasmia"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["tasmia_core*"]

@@ -4,3 +4,4 @@ __pycache__/
 venv/
 .DS_Store
 tools/
+core/tasmia_core.egg-info/

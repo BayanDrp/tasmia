@@ -3,6 +3,7 @@
 import unittest
 
 from tasmia_core.normalize import (
+    collapse_repetition,
     display_tokens,
     display_word,
     normalize,
@@ -252,6 +253,30 @@ class DisplayTokensTests(unittest.TestCase):
         self.assertEqual(display_tokens(""), [])
         self.assertEqual(display_tokens("   "), [])
         self.assertEqual(display_tokens("ۖ ۝"), [])
+
+
+class CollapseRepetitionTests(unittest.TestCase):
+    def test_collapses_hallucination_loop(self):
+        loop = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا " + "او " * 200
+        result = collapse_repetition(loop.strip())
+        self.assertEqual(result.count("او"), 10)
+
+    def test_keeps_doubles_and_triples(self):
+        self.assertEqual(collapse_repetition("يُسْرًا يُسْرًا"), "يُسْرًا يُسْرًا")
+        self.assertEqual(collapse_repetition("قل قل قل"), "قل قل قل")
+
+    def test_normal_text_untouched(self):
+        ayah = "قُلْ هُوَ ٱللَّهُ أَحَدٌ ٱللَّهُ ٱلصَّمَدُ"
+        self.assertEqual(collapse_repetition(ayah), ayah)
+
+    def test_repeated_ayah_survives(self):
+        # A reciter practising an ayah twice must keep both copies.
+        twice = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"
+        self.assertEqual(collapse_repetition(twice), twice)
+
+    def test_empty_input(self):
+        self.assertEqual(collapse_repetition(""), "")
+        self.assertEqual(collapse_repetition("   "), "")
 
 
 if __name__ == "__main__":
