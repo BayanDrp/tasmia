@@ -1,7 +1,8 @@
 """HTTP layer of the local ASR service.
 
-Exposes the same JSON contract as the HF Space, so the Go backend and
-the demo UI can point at either. Heavy imports (torch, asr) happen
+Exposes the same JSON contract as the HF Space. By default the heavy
+transcription runs on the Space (space_asr.prefer), with the local
+engine as fallback; judging always stays local. Heavy imports happen
 inside the route handlers, never at module import, so the server boots
 fast and stays light until the first real request.
 """
@@ -22,7 +23,7 @@ from .config import SERVER_HOST, SERVER_PORT
 
 app = FastAPI(
     title="Tasmia ASR service",
-    description="Local offline recitation transcriber. Same contract as the Space.",
+    description="Recitation transcriber and judge. HF Space ASR by default, local fallback.",
     version="1.0.0",
 )
 
@@ -81,6 +82,8 @@ async def transcribe(
             response.update(session)
         return response
 
+    except HTTPException:
+        raise
     except NotImplementedError as exc:
         raise HTTPException(status_code=501, detail=str(exc))
     except ValueError as exc:
@@ -130,6 +133,8 @@ async def transcribe_json(payload: dict):
             response.update(session)
         return response
 
+    except HTTPException:
+        raise
     except NotImplementedError as exc:
         raise HTTPException(status_code=501, detail=str(exc))
     except ValueError as exc:

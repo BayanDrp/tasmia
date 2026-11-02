@@ -10,6 +10,7 @@ from tasmia_core.normalize import (
     normalize_text,
     normalize_word,
     strip_tashkeel,
+    tashkeel_pattern,
     weak_letter_key,
     word_match,
 )
@@ -39,6 +40,38 @@ class StripTashkeelTests(unittest.TestCase):
 
     def test_keeps_letters_and_spaces(self):
         self.assertEqual(strip_tashkeel("قُلْ هُوَ"), "قل هو")
+
+
+class TashkeelPatternTests(unittest.TestCase):
+    def test_keeps_short_vowels(self):
+        self.assertEqual(tashkeel_pattern("هُوَ"), "\u064F\u064E")
+
+    def test_keeps_tanween(self):
+        self.assertEqual(tashkeel_pattern("كِتَابٌ"), "\u0650\u064E\u064C")
+
+    def test_keeps_sukun(self):
+        self.assertEqual(tashkeel_pattern("مِنْ"), "\u0650\u0652")
+
+    def test_drops_shadda(self):
+        self.assertEqual(tashkeel_pattern("رَبِّ"), "\u064E\u0650")
+
+    def test_drops_quranic_marks(self):
+        self.assertEqual(tashkeel_pattern("قُلْ ۖ"), "\u064F\u0652")
+
+    def test_warsh_and_hafs_orthography_match(self):
+        self.assertEqual(
+            tashkeel_pattern("اَ۬لذِےٓ"),
+            tashkeel_pattern("الَّذِي"),
+        )
+
+    def test_missing_final_vowel_differs(self):
+        self.assertNotEqual(
+            tashkeel_pattern("صَدْرَكَ"),
+            tashkeel_pattern("صَدْرَك"),
+        )
+
+    def test_empty_word(self):
+        self.assertEqual(tashkeel_pattern(""), "")
 
 
 class NormalizeWordTests(unittest.TestCase):

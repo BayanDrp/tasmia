@@ -17,7 +17,7 @@ import numpy as np
 import soundfile as sf
 import torch
 from config import MAX_AUDIO_SECONDS  # local module, shared with app.py
-from tasmia_core.normalize import merge_chunk_texts  # vendored core (pure stdlib)
+from tasmia_core.normalize import collapse_repetition, merge_chunk_texts  # vendored core (pure stdlib)
 from huggingface_hub import hf_hub_download
 from peft import PeftModel
 from transformers import (
@@ -37,6 +37,8 @@ ENGINE_ALIASES = {
 MAX_CHUNK_SECONDS = 20
 CHUNK_OVERLAP_SECONDS = 1
 SILENCE_RMS = 0.003           # near-silent windows are skipped (no hallucination basis)
+TRIM_THRESHOLD_DB = -40       # silence level for the edge trim filter
+TRIM_KEEP_SECONDS = 0.3       # keep this much real silence at each edge
 MAX_CACHED_MODELS = 2         # FIFO eviction; whisper-medium fp16 is ~1.5 GB each
 WHISPER_MAX_NEW_TOKENS = 444  # 30 s window maximum
 
@@ -156,7 +158,17 @@ ENGINES = EngineCache(MAX_CACHED_MODELS)
 # --------------------------------------------------------------------------
 
 def decode_audio(audio_path: str):
-    """Decode common uploaded formats to mono 16 kHz float audio."""
+    """Decode common uploaded formats to mono 16 kHz float audio.
+
+    Silence at both edges is trimmed (forward, reverse, forward,
+    reverse), so a quiet lead-in cannot feed hallucinations.
+    """
+    trim = (
+        f"silenceremove=start_periods=1:start_threshold={TRIM_THRESHOLD_DB}dB"
+        f":start_silence={TRIM_KEEP_SECONDS}"
+    )
+    filters = f"-af {trim},areverse,{trim},areverse"
+
     with tempfile.NamedTemporaryFile(suffix=".wav") as converted:
         command = [
             "ffmpeg",
@@ -172,6 +184,7 @@ def decode_audio(audio_path: str):
             "1",
             "-ar",
             "16000",
+            *filters.split(),
             "-f",
             "wav",
             converted.name,
@@ -261,6 +274,7 @@ def transcribe_transcript(audio_path: str, model_id: str, language: str = "ar"):
         texts.append(_forward_chunk(chunk, sample_rate, engine, language))
 
     text = merge_chunk_texts(texts)
+    text = collapse_repetition(text)
     if not text:
         raise ValueError("لم أتمكن من تمييز كلام واضح في التسجيل.")
 

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#161310">
+	<title>تسميع · المسمّع الذكي</title>
+	<link rel="stylesheet" href="/css/style.css">
+	<link rel="manifest" href="/manifest.json">
+</head>
+<body>
+	<header class="top">
+		<div class="header-nav">
+			<h1><a class="homelink" href="/">المسمّع الذكي</a></h1>
+			<nav class="nav-links">
+				<a class="navlink active" href="/recite">التسميع</a>
+				<a class="navlink" href="/dashboard">الإحصائيات</a>
+			</nav>
+		</div>
+		<p class="tagline">وضع التسميع برواية ورش عن نافع</p>
+	</header>
+
+	<main>
+		<section class="picker" aria-label="اختيار التسميع">
+			<label class="field">السورة
+				<select id="surah" aria-label="السورة"></select>
+			</label>
+			<label class="field">من آية
+				<select id="from" aria-label="من آية"></select>
+			</label>
+			<label class="field">إلى آية
+				<select id="to" aria-label="إلى آية"></select>
+			</label>
+			<label class="field">وضع التسميع
+				<select id="model" aria-label="وضع التسميع">
+					<option value="checked">تدقيق الحركات</option>
+					<option value="expert">نموذج ورش</option>
+				</select>
+			</label>
+		</section>
+		<p id="mode-hint" class="mode-hint" aria-live="polite">مع التشكيل، يكشف أخطاء الحركات</p>
+
+		<section class="card" aria-label="نص المصحف">
+			<div id="text" class="text" aria-live="polite">اختر سورة وآيات، ثم اضغط على زر الميكروفون للبدء بالتسميع.</div>
+		</section>
+
+		<div id="word-detail" class="word-detail" hidden aria-live="polite">
+			<div class="word-detail-content">
+				<span id="detail-badge" class="detail-badge"></span>
+				<span id="detail-text" class="detail-text"></span>
+			</div>
+			<button id="close-detail" class="close-detail" type="button" aria-label="إغلاق التفاصيل">×</button>
+		</div>
+
+		<section class="controls">
+			<div class="mic-wrapper">
+				<button id="mic" class="mic" aria-label="اضغط للتسميع" aria-pressed="false" type="button">
+					<svg class="mic-icon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor"
+						stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<rect x="9" y="3" width="6" height="11" rx="3"/>
+						<path d="M5 11a7 7 0 0 0 14 0"/>
+						<path d="M12 18v3"/>
+					</svg>
+					<span class="stop-icon" aria-hidden="true"></span>
+				</button>
+				<span id="rec-timer" class="rec-timer" hidden>00:00</span>
+			</div>
+
+			<div class="action-buttons">
+				<label class="upload" id="upload-label">
+					رفع تسجيل
+					<input id="audio-file" type="file" accept="audio/*,.wav,.webm,.mp3,.m4a,.ogg,.flac">
+				</label>
+				<button id="cancel-rec" class="cancel-btn" hidden type="button">إلغاء التسجيل</button>
+			</div>
+
+			<p id="status" class="status" role="status" aria-live="polite">جاهز</p>
+			<div id="score" class="score" aria-live="polite" hidden></div>
+		</section>
+	</main>
+
+	<script src="/js/app.js"></script>
+</body>
+</html>

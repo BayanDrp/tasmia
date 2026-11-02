@@ -25,9 +25,16 @@
     "host": "0.0.0.0",
     "port": 7860
   },
-  "space_fallback": {
-    "enabled": false,
+  "web_app": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "frontend_dir": "web/frontend",
+    "quran_path": "data/quran/quran.json"
+  },
+  "space_asr": {
+    "enabled": true,
+    "prefer": true,
     "url": "https://dr-pisto-tasmia-live.hf.space",
-    "timeout_seconds": 300
+    "timeout_seconds": 60
   }
 }

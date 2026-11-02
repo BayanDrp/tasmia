@@ -1,0 +1,18 @@
+{
+  "name": "المسمّع الذكي",
+  "short_name": "المسمّع",
+  "description": "مدرب التلاوة القرآنية برواية ورش عن نافع بالذكاء الاصطناعي دون إنترنت",
+  "start_url": "/recite",
+  "display": "standalone",
+  "background_color": "#161310",
+  "theme_color": "#161310",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/assets/fonts/Amiri-Regular.ttf",
+      "sizes": "any",
+      "type": "font/ttf"
+    }
+  ]
+}

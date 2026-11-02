@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "surah": 94,
+  "surah_name": "الشرح",
+  "ayah_from": 1,
+  "ayah_to": 5,
+  "score": 0.9118,
+  "strict_accuracy": 0.8235,
+  "counts": {
+    "ok": 14,
+    "missing": 0,
+    "wrong": 1,
+    "mispronounced": 2,
+    "repeated": 0,
+    "uncertain": 0,
+    "extra": 0
+  },
+  "total_words": 17,
+  "words": [
+    {"expected": "اَلَمْ", "heard": "أَلَمْ", "status": "ok", "ayah": 1, "index": 0, "start": 0.2, "end": 0.6, "probability": 0.98, "distance": 0},
+    {"expected": "نَشْرَحْ", "heard": "نَشْرَحْ", "status": "ok", "ayah": 1, "index": 1, "start": 0.7, "end": 1.2, "probability": 0.95, "distance": 0},
+    {"expected": "لَكَ", "heard": "لَكَ", "status": "ok", "ayah": 1, "index": 2, "start": 1.3, "end": 1.6, "probability": 0.99, "distance": 0},
+    {"expected": "صَدْرَكَ", "heard": "صَدْرَك", "status": "ok", "ayah": 1, "index": 3, "start": 1.7, "end": 2.4, "probability": 0.92, "distance": 0},
+    {"expected": "وَوَضَعْنَا", "heard": "وَوَضَعْنَا", "status": "ok", "ayah": 2, "index": 4, "start": 2.8, "end": 3.6, "probability": 0.94, "distance": 0},
+    {"expected": "عَنكَ", "heard": "عَنكَ", "status": "ok", "ayah": 2, "index": 5, "start": 3.7, "end": 4.1, "probability": 0.96, "distance": 0},
+    {"expected": "وِزْرَكَ", "heard": "وِزْرَكَ", "status": "ok", "ayah": 2, "index": 6, "start": 4.2, "end": 4.9, "probability": 0.93, "distance": 0},
+    {"expected": "اَ۬لذِےٓ", "heard": "الذي", "status": "ok", "ayah": 3, "index": 7, "start": 5.2, "end": 5.8, "probability": 0.97, "distance": 0},
+    {"expected": "أَنقَضَ", "heard": "أَنْقَضَ", "status": "ok", "ayah": 3, "index": 8, "start": 5.9, "end": 6.5, "probability": 0.91, "distance": 0},
+    {"expected": "ظَهْرَكَ", "heard": "ظَهْرَكَ", "status": "ok", "ayah": 3, "index": 9, "start": 6.6, "end": 7.3, "probability": 0.95, "distance": 0},
+    {"expected": "وَرَفَعْنَا", "heard": "وَرَفَعْهَا", "status": "mispronounced", "ayah": 4, "index": 10, "start": 7.7, "end": 8.4, "probability": 0.88, "distance": 1},
+    {"expected": "لَكَ", "heard": "لَكَ", "status": "ok", "ayah": 4, "index": 11, "start": 8.5, "end": 8.8, "probability": 0.98, "distance": 0},
+    {"expected": "ذِكْرَكَ", "heard": "ذِكْرَكَ", "status": "ok", "ayah": 4, "index": 12, "start": 8.9, "end": 9.6, "probability": 0.94, "distance": 0},
+    {"expected": "فَإِنَّ", "heard": "فَإِنَّ", "status": "ok", "ayah": 5, "index": 13, "start": 10.0, "end": 10.5, "probability": 0.96, "distance": 0},
+    {"expected": "مَعَ", "heard": "مَعَ", "status": "ok", "ayah": 5, "index": 14, "start": 10.6, "end": 10.9, "probability": 0.97, "distance": 0},
+    {"expected": "اَ۬لْعُسْرِ", "heard": "اليسر", "status": "wrong", "ayah": 5, "index": 15, "start": 11.0, "end": 11.6, "probability": 0.85, "distance": 3},
+    {"expected": "يُسْراً", "heard": "يُسْرَعُ", "status": "mispronounced", "ayah": 5, "index": 16, "start": 11.7, "end": 12.3, "probability": 0.79, "distance": 1}
+  ],
+  "extras": [],
+  "model": "tahkik-warsh-medium-lora",
+  "latency_ms": 1240
+}

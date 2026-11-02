@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#161310">
+	<title>لوحة الإحصائيات · المسمّع الذكي</title>
+	<link rel="stylesheet" href="/css/style.css">
+	<link rel="manifest" href="/manifest.json">
+</head>
+<body>
+	<header class="top">
+		<div class="header-nav">
+			<h1><a class="homelink" href="/">المسمّع الذكي</a></h1>
+			<nav class="nav-links">
+				<a class="navlink active" href="/dashboard">الإحصائيات</a>
+				<a class="navlink" href="/recite">التسميع</a>
+			</nav>
+		</div>
+		<p class="tagline">سجل التلاوات والإحصائيات التراكمية</p>
+	</header>
+
+	<main>
+		<section class="stats-overview" aria-label="ملخص الأداء">
+			<div class="stat-card">
+				<span class="stat-num" id="stat-total">٠</span>
+				<span class="stat-label">جلسات التسميع</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-num" id="stat-avg-score">٠٪</span>
+				<span class="stat-label">متوسط النتيجة</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-num" id="stat-words">٠</span>
+				<span class="stat-label">إجمالي الكلمات المفحوصة</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-num" id="stat-correct">٠٪</span>
+				<span class="stat-label">نسبة الإتقان التام</span>
+			</div>
+		</section>
+
+		<section class="history-section" aria-label="سجل الجلسات السابقة">
+			<div class="history-head">
+				<h2>سجل التسميعات الأخيرة</h2>
+				<button id="clear-history" class="btn-secondary" type="button">مسح السجل</button>
+			</div>
+
+			<div id="history-list" class="history-list">
+				<p class="empty-state">لا توجد جلسات تسميع مسجلة بعد. <a href="/recite">ابدأ التسميع الآن</a>.</p>
+			</div>
+		</section>
+	</main>
+
+	<footer class="foot">المسمّع الذكي · تلاوة برواية ورش عن نافع</footer>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			loadHistory();
+
+			document.getElementById("clear-history").addEventListener("click", () => {
+				if (confirm("هل أنت متأكد من مسح سجل التسميع؟")) {
+					localStorage.removeItem("tasmia_history");
+					loadHistory();
+				}
+			});
+		});
+
+		function toArabicDigits(num) {
+			const digits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+			return String(num).replace(/\d/g, (d) => digits[Number(d)]);
+		}
+
+		function loadHistory() {
+			let history = [];
+			try {
+				history = JSON.parse(localStorage.getItem("tasmia_history") || "[]");
+			} catch (e) {
+				history = [];
+			}
+
+			const listEl = document.getElementById("history-list");
+			const totalEl = document.getElementById("stat-total");
+			const avgScoreEl = document.getElementById("stat-avg-score");
+			const wordsEl = document.getElementById("stat-words");
+			const correctEl = document.getElementById("stat-correct");
+
+			if (!history.length) {
+				totalEl.textContent = toArabicDigits(0);
+				avgScoreEl.textContent = toArabicDigits(0) + "٪";
+				wordsEl.textContent = toArabicDigits(0);
+				correctEl.textContent = toArabicDigits(0) + "٪";
+				listEl.innerHTML = `<p class="empty-state">لا توجد جلسات تسميع مسجلة بعد. <a class="cta-link" href="/recite">ابدأ التسميع الآن</a>.</p>`;
+				return;
+			}
+
+			let totalScore = 0;
+			let totalStrict = 0;
+			let totalWords = 0;
+
+			history.forEach((item) => {
+				totalScore += item.score || 0;
+				totalStrict += item.strict_accuracy || 0;
+				totalWords += item.total_words || 0;
+			});
+
+			const avgScore = Math.round((totalScore / history.length) * 100);
+			const avgCorrect = Math.round((totalStrict / history.length) * 100);
+
+			totalEl.textContent = toArabicDigits(history.length);
+			avgScoreEl.textContent = toArabicDigits(avgScore) + "٪";
+			wordsEl.textContent = toArabicDigits(totalWords);
+			correctEl.textContent = toArabicDigits(avgCorrect) + "٪";
+
+			listEl.innerHTML = "";
+			history.slice().reverse().forEach((item) => {
+				const card = document.createElement("div");
+				card.className = "history-card";
+				const pct = Math.round((item.score || 0) * 100);
+				const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString("ar-EG", {
+					month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+				}) : "سابقًا";
+
+				card.innerHTML = `
+					<div class="h-card-main">
+						<div class="h-card-title">
+							<h3>سورة ${item.surah_name || "القرآن"}</h3>
+							<span class="h-card-range">الآيات (${toArabicDigits(item.ayah_from || 1)} - ${toArabicDigits(item.ayah_to || item.total_verses || "الختام")})</span>
+						</div>
+						<div class="h-card-date">${date}</div>
+					</div>
+					<div class="h-card-stats">
+						<span class="h-score ${pct >= 85 ? 'good' : pct >= 60 ? 'fair' : 'poor'}">${toArabicDigits(pct)}٪</span>
+						<a class="btn-recite-again" href="/recite?surah=${item.surah}&from=${item.ayah_from}&to=${item.ayah_to}">تسميع مجددًا</a>
+					</div>
+				`;
+				listEl.appendChild(card);
+			});
+		}
+	</script>
+</body>
+</html>

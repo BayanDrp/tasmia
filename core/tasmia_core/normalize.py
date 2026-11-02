@@ -63,6 +63,23 @@ def normalize_word(word: str) -> str:
     return "".join(text.split())
 
 
+# Basic vowel marks compared by the tashkeel mode. Shadda is excluded:
+# Warsh and Hafs orthography mark gemination differently, and the ASR
+# often omits it. Quranic annotation marks are also excluded.
+_TASHKEEL_MARKS = frozenset("\u064B\u064C\u064D\u064E\u064F\u0650\u0652")
+
+
+def tashkeel_pattern(word: str) -> str:
+    """Return the ordered basic vowel marks of one word.
+
+    The base letters are aligned separately. This pattern keeps the short
+    vowels, tanween and sukun, drops shadda and Quranic marks, and ignores
+    which letter carries the mark. That makes it tolerant of Warsh/Hafs
+    orthography differences such as the fatha on the definite article.
+    """
+    return "".join(char for char in word if char in _TASHKEEL_MARKS)
+
+
 def normalize_text(text: str) -> str:
     """Normalize a phrase for matching, preserving word order."""
     return " ".join(

@@ -3,5 +3,7 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
-tools/
+tools/*
+!tools/setup_venv.sh
+!tools/build_text_golden.py
 core/tasmia_core.egg-info/

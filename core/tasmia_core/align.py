@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, replace
 
 from .models import (
@@ -18,7 +19,7 @@ from .models import (
     STATUS_UNCERTAIN,
     STATUS_WRONG,
 )
-from .normalize import normalize_word, weak_letter_key
+from .normalize import normalize_word, tashkeel_pattern, weak_letter_key
 
 
 _INF = 10**15
@@ -494,6 +495,42 @@ def _mark_repetitions(
         )
 
 
+def _clusters(text: str) -> list[str]:
+    """Split a token into base-letter clusters, marks stay with their letter."""
+    clusters: list[str] = []
+    current = ""
+    for char in text:
+        if unicodedata.category(char).startswith("M") and current:
+            current += char
+        else:
+            if current:
+                clusters.append(current)
+            current = char
+    if current:
+        clusters.append(current)
+    return clusters
+
+
+def _split_fused_text(
+    fused: str,
+    first_norm: str,
+    second_norm: str,
+) -> tuple[str, str] | None:
+    """Split a fused token at the exact base-letter boundary.
+
+    The split keeps the original diacritics, unlike using the expected
+    display text, so the tashkeel mode sees what the ASR actually
+    produced. Returns None when no exact split exists.
+    """
+    clusters = _clusters(fused)
+    for index in range(1, len(clusters)):
+        first = "".join(clusters[:index])
+        second = "".join(clusters[index:])
+        if normalize_word(first) == first_norm and normalize_word(second) == second_norm:
+            return first, second
+    return None
+
+
 def _repair_heard_tokens(expected: list[Word], heard: list[HeardWord]) -> list[HeardWord]:
     """Rescue ASR tokenization artifacts before alignment.
 
@@ -516,16 +553,13 @@ def _repair_heard_tokens(expected: list[Word], heard: list[HeardWord]) -> list[H
     expected_norm = [word.normalized or normalize_word(word.text) for word in expected]
     single = {norm for norm in expected_norm if norm}
 
-    # normalized concat of two consecutive expected words -> their norms
-    fusion_of: dict[str, tuple[str, str]] = {}
-    for first, second in zip(expected_norm, expected_norm[1:]):
+    # normalized concat of two consecutive expected words -> their words
+    fusion_of: dict[str, tuple[Word, Word]] = {}
+    for first_word, second_word in zip(expected, expected[1:]):
+        first = first_word.normalized or normalize_word(first_word.text)
+        second = second_word.normalized or normalize_word(second_word.text)
         if first and second and (first + second) not in single:
-            fusion_of.setdefault(first + second, (first, second))
-
-    # display text of each expected norm (cosmetic; alignment uses norms)
-    display: dict[str, str] = {}
-    for word in expected:
-        display.setdefault(word.normalized or normalize_word(word.text), word.text)
+            fusion_of.setdefault(first + second, (first_word, second_word))
 
     repaired: list[HeardWord] = []
     index = 0
@@ -555,11 +589,22 @@ def _repair_heard_tokens(expected: list[Word], heard: list[HeardWord]) -> list[H
         # fused token's timing and probability.
         parts = fusion_of.get(norm) if norm else None
         if parts:
-            for part in parts:
+            first_word, second_word = parts
+            first_norm = first_word.normalized or normalize_word(first_word.text)
+            second_norm = second_word.normalized or normalize_word(second_word.text)
+            split = _split_fused_text(word.text, first_norm, second_norm)
+            if split is None:
+                first_text, second_text = first_word.text, second_word.text
+            else:
+                first_text, second_text = split
+            for part_text, part_norm in (
+                (first_text, first_norm),
+                (second_text, second_norm),
+            ):
                 repaired.append(
                     HeardWord(
-                        text=display.get(part, part),
-                        normalized=part,
+                        text=part_text,
+                        normalized=part_norm,
                         start=word.start,
                         end=word.end,
                         probability=word.probability,
@@ -587,6 +632,9 @@ def align(
     ``ExtraResult.after_index`` is the global, zero based index of the last
     expected word before the extra.  It is ``-1`` when the extra occurs
     before the first expected word.
+
+    The alignment always compares base letters. Call
+    :func:`apply_tashkeel_check` afterwards for the checked mode.
     """
 
     active_config = config or AlignConfig()
@@ -642,4 +690,26 @@ def align(
     )
 
 
-__all__ = ["AlignConfig", "align"]
+def apply_tashkeel_check(result: AlignResult) -> AlignResult:
+    """Reclassify base-exact words whose basic vowels differ.
+
+    The base alignment stays unchanged. Only words already marked ``ok``
+    are checked, so missing, wrong and uncertain words keep their status.
+    A vowel difference becomes ``mispronounced``: the consonants are
+    right, the haraka is not.
+    """
+    words: list[WordResult] = []
+    for word in result.words:
+        if word.status == STATUS_OK and word.heard is not None:
+            if tashkeel_pattern(word.expected) != tashkeel_pattern(word.heard):
+                word = replace(word, status=STATUS_MISPRONOUNCED)
+        words.append(word)
+    return AlignResult(
+        words=words,
+        extras=result.extras,
+        expected_count=result.expected_count,
+        heard_count=result.heard_count,
+    )
+
+
+__all__ = ["AlignConfig", "align", "apply_tashkeel_check"]

@@ -42,9 +42,10 @@ SERVER_PORT: int = _cfg["server_web"]["port"]
 SERVER_DOCKER_HOST: str = _cfg["server_docker"]["host"]
 SERVER_DOCKER_PORT: int = _cfg["server_docker"]["port"]
 
-# --- optional cloud fallback (read by the Go backend) ---
-SPACE_FALLBACK_ENABLED: bool = _cfg["space_fallback"]["enabled"]
-SPACE_FALLBACK_URL: str = _cfg["space_fallback"]["url"]
-SPACE_FALLBACK_TIMEOUT: int = _cfg["space_fallback"]["timeout_seconds"]
+# --- cloud ASR preference (Python reads it; Go mirrors the shape) ---
+SPACE_ASR_ENABLED: bool = _cfg["space_asr"]["enabled"]
+SPACE_ASR_PREFER: bool = _cfg["space_asr"]["prefer"]
+SPACE_ASR_URL: str = _cfg["space_asr"]["url"]
+SPACE_ASR_TIMEOUT: int = _cfg["space_asr"]["timeout_seconds"]
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from tasmia_core.align import align
+from tasmia_core.align import align, apply_tashkeel_check
 from tasmia_core.models import HeardWord, Word
 from tasmia_core.normalize import normalize_word
 
@@ -79,6 +79,63 @@ class FusionRepairTests(unittest.TestCase):
         result = align(expected, heard_list)
         self.assertEqual([w.status for w in result.words], ["ok", "ok", "ok"])
         self.assertEqual(result.extras, [])
+
+
+class TashkeelCheckTests(unittest.TestCase):
+    """The checked mode: base letters match, basic vowels decide."""
+
+    def test_vowel_error_becomes_mispronounced(self):
+        result = align([word("أَلَمْ")], [heard("أَلِمْ")])
+        self.assertEqual(result.words[0].status, "ok")
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, "mispronounced")
+
+    def test_matching_vowels_stay_ok(self):
+        result = align([word("أَلَمْ")], [heard("اَلَمْ")])
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, "ok")
+
+    def test_missing_final_vowel_becomes_mispronounced(self):
+        result = align([word("صَدْرَكَ")], [heard("صَدْرَك")])
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, "mispronounced")
+
+    def test_shadda_is_ignored(self):
+        result = align([word("رَبِّ")], [heard("رَبِ")])
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, "ok")
+
+    def test_warsh_orthography_is_tolerated(self):
+        result = align([word("اَ۬لذِےٓ")], [heard("الَّذِي")])
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, "ok")
+
+    def test_fused_split_keeps_raw_hearing(self):
+        expected = [
+            word("وِزْرَكَ", index=0),
+            word("اَ۬لذِےٓ", index=1),
+        ]
+        result = align(expected, [heard("وِزْرَكَالَّذِي")])
+        self.assertEqual(result.words[1].heard, "الَّذِي")
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[1].status, "ok")
+
+    def test_non_ok_status_is_unchanged(self):
+        result = align([word("مَعَ")], [heard("فَإِنَّمَا")])
+        original = result.words[0].status
+        self.assertNotEqual(original, "ok")
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.words[0].status, original)
+
+    def test_counts_and_extras_are_preserved(self):
+        result = align(
+            [word("قُلْ"), word("هُوَ")],
+            [heard("قُلْ"), heard("هُوَ"), heard("زَائِد")],
+        )
+        checked = apply_tashkeel_check(result)
+        self.assertEqual(checked.expected_count, result.expected_count)
+        self.assertEqual(checked.heard_count, result.heard_count)
+        self.assertEqual(len(checked.extras), len(result.extras))
 
 
 if __name__ == "__main__":

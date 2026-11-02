@@ -132,7 +132,15 @@ def _api_queue_transcribe(audio_base64: str, model: str = "") -> dict:
 async def whoami():
     from engine import ENGINES, ENGINE_ALIASES  # lazy
 
-    return {"service": "tasmia", "aliases": ENGINE_ALIASES, "loaded_engines": ENGINES.snapshot()}
+    return {
+        "service": "tasmia",
+        # contract 2 = edge trim + collapse_repetition present; the local
+        # fallback checks this before trusting Space transcripts
+        "contract": 2,
+        "features": {"trim_silence": True, "collapse_repetition": True},
+        "aliases": ENGINE_ALIASES,
+        "loaded_engines": ENGINES.snapshot(),
+    }
 
 
 @app.get("/", include_in_schema=False)
