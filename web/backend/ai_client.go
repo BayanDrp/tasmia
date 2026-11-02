@@ -13,7 +13,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -85,10 +87,18 @@ type AIClient struct {
 	http    *http.Client
 }
 
-// NewAIClient targets the AI service from config.json. A bind host of
-// 0.0.0.0 is normalized to 127.0.0.1 (0.0.0.0 is for listening, not
-// for dialing).
+// NewAIClient targets the AI service from config.json, or the full
+// TASMIA_AI_URL when set. Render uses the latter for its public HTTPS
+// service URL. A bind host of 0.0.0.0 is normalized to 127.0.0.1
+// (0.0.0.0 is for listening, not for dialing).
 func NewAIClient(host string, port int) *AIClient {
+	if url := strings.TrimRight(os.Getenv("TASMIA_AI_URL"), "/"); url != "" {
+		return &AIClient{
+			baseURL: url,
+			// transcription takes ~35 s on CPU; be generous
+			http: &http.Client{Timeout: 300 * time.Second},
+		}
+	}
 	if host == "" || host == "0.0.0.0" {
 		host = "127.0.0.1"
 	}

@@ -26,8 +26,8 @@ pinned: false
 
 ## بنية الملفات
 
-- `app.py` — واجهة الـ API (gradio.Server) وواجهة العرض
-- `engine.py` — منطق النماذج والتفريغ
-- `config.py` — إعدادات مشتركة بين الاثنين
-- `tasmia_core/` — نسخة مُورَّدة من حزمة `core/tasmia_core` في المستودع الرئيسي
+- `app.py`: واجهة الـ API (gradio.Server) وواجهة العرض
+- `engine.py`: منطق النماذج والتفريغ
+- `config.py`: إعدادات مشتركة بين الاثنين
+- `tasmia_core/`: نسخة مُورَّدة من حزمة `core/tasmia_core` في المستودع الرئيسي
   (دالة `merge_chunk_texts`)؛ عند تعديل النواة أعِد مزامنتها إلى هنا.

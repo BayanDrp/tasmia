@@ -1,0 +1,40 @@
+{
+  "models": {
+    "aliases": {
+      "quick": "rabah2026/wav2vec2-large-xlsr-53-arabic-quran-v_final",
+      "warsh": "Dr-pisto/tahkik-warsh-medium-lora"
+    },
+    "default": "quick"
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "max_seconds": 180,
+    "chunk_seconds": 20,
+    "chunk_overlap_seconds": 1,
+    "silence_rms": 0.003,
+    "trim_silence": true
+  },
+  "compute": {
+    "device": "auto"
+  },
+  "server_docker": {
+    "host": "127.0.0.1",
+    "port": 8000
+  },
+  "server_web": {
+    "host": "0.0.0.0",
+    "port": 7860
+  },
+  "web_app": {
+    "host": "0.0.0.0",
+    "port": 10000,
+    "frontend_dir": "web/frontend",
+    "quran_path": "data/quran/quran.json"
+  },
+  "space_asr": {
+    "enabled": true,
+    "prefer": true,
+    "url": "https://dr-pisto-tasmia-live.hf.space",
+    "timeout_seconds": 60
+  }
+}

@@ -799,7 +799,7 @@ function createExtraWordSpan(extra) {
 	span.setAttribute("aria-label", `كلمة زائدة: ${extra.text}`);
 
 	span.addEventListener("click", () => showWordDetail({
-		expected: "—",
+		expected: "-",
 		heard: extra.text,
 		status: "extra",
 		ayah: null,
@@ -828,7 +828,7 @@ function showWordDetail(wordData, element) {
 	} else if (wordData.status === "ok") {
 		description = `الكلمة: <strong>${wordData.expected}</strong> · سُمعت: <strong>${wordData.heard || wordData.expected}</strong>`;
 	} else {
-		description = `الكلمة: <strong>${wordData.expected}</strong> · سُمعت: <strong>${wordData.heard || "—"}</strong> (${meta.desc})`;
+		description = `الكلمة: <strong>${wordData.expected}</strong> · سُمعت: <strong>${wordData.heard || "-"}</strong> (${meta.desc})`;
 	}
 
 	text.innerHTML = description;

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: tasmia-ai-bayan
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r ai/requirements.txt && pip install -e ./core
+    startCommand: cd ai && uvicorn app.main:app --host 0.0.0.0 --port 10000
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+  - type: web
+    name: tasmia-bayan
+    runtime: go
+    plan: free
+    region: frankfurt
+    buildCommand: cd web/backend && go build -o tasmia ./cmd
+    startCommand: TASMIA_CONFIG=config.render.json ./web/backend/tasmia
+    healthCheckPath: /api/health
+    envVars:
+      - key: TASMIA_AI_URL
+        value: https://tasmia-ai-bayan.onrender.com

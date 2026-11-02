@@ -1,5 +1,5 @@
 // Service Worker for Tasmia (المسمّع الذكي)
-const CACHE_NAME = "tasmia-static-v8";
+const CACHE_NAME = "tasmia-static-v9";
 const ASSETS_TO_CACHE = [
 	"/",
 	"/recite",
