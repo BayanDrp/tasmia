@@ -66,13 +66,19 @@ async def api_transcribe_multipart(
     audio: UploadFile = File(...),
     model: str = Form(DEFAULT_MODEL_ALIAS),
     language: str = Form("ar"),
+    surah: int = Form(0),
+    ayah_from: int = Form(1),
+    ayah_to: int = Form(0),
+    mode: str = Form(""),
 ):
     payload = await audio.read()
     if not payload:
         return JSONResponse(status_code=400, content={"error": "audio file is empty"})
 
     suffix = os.path.splitext(audio.filename or "clip.wav")[1] or ".wav"
-    return await _transcribe_payload(payload, suffix, model, language)
+    return await _transcribe_payload(
+        payload, suffix, model, language, surah, ayah_from, ayah_to, mode
+    )
 
 
 @app.post("/api/transcribe/json")
@@ -96,17 +102,73 @@ async def api_transcribe_json(request_data: dict):
     if not payload:
         return JSONResponse(status_code=400, content={"error": "audio file is empty"})
 
-    name = str(request_data.get("filename") or "clip.wav")
-    return await _transcribe_payload(payload, os.path.splitext(name)[1] or ".wav", model, language)
-
-
-async def _transcribe_payload(payload: bytes, suffix: str, model: str, language: str):
     try:
-        return await run_in_threadpool(_transcribe_sync, payload, suffix, (model or "").strip() or DEFAULT_MODEL_ALIAS, language)
+        surah = int(request_data.get("surah") or 0)
+        ayah_from = int(request_data.get("ayah_from") or 1)
+        ayah_to = int(request_data.get("ayah_to") or 0)
+        mode = str(request_data.get("mode") or "")
+    except (TypeError, ValueError):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "invalid surah, ayah_from, or ayah_to"},
+        )
+
+    name = str(request_data.get("filename") or "clip.wav")
+    return await _transcribe_payload(
+        payload,
+        os.path.splitext(name)[1] or ".wav",
+        model,
+        language,
+        surah,
+        ayah_from,
+        ayah_to,
+        mode,
+    )
+
+
+async def _transcribe_payload(
+    payload: bytes,
+    suffix: str,
+    model: str,
+    language: str,
+    surah: int = 0,
+    ayah_from: int = 1,
+    ayah_to: int = 0,
+    mode: str = "",
+):
+    try:
+        started = time.perf_counter()
+        result = await run_in_threadpool(
+            _transcribe_sync,
+            payload,
+            suffix,
+            (model or "").strip() or DEFAULT_MODEL_ALIAS,
+            language,
+        )
+        result = dict(result)
+        result.setdefault("text", str(result.get("transcription", "")).strip())
+        if not surah:
+            return result
+
+        from judge import evaluate, parse_mode
+
+        session = await run_in_threadpool(
+            evaluate,
+            result["text"],
+            surah,
+            ayah_from,
+            ayah_to or None,
+            parse_mode(mode),
+            str(result.get("model", "")),
+            int((time.perf_counter() - started) * 1000),
+        )
+        response = {"text": result["text"], "model": result.get("model", "")}
+        response.update(session)
+        return response
     except ValueError as exc:
         return JSONResponse(status_code=400, content={"error": str(exc)})
     except Exception as exc:  # keep strangers from getting full tracebacks
-        return JSONResponse(status_code=400, content={"error": f"transcription failed: {exc}"})
+        return JSONResponse(status_code=400, content={"error": f"processing failed: {exc}"})
 
 
 @app.api(name="transcribe")

@@ -88,9 +88,9 @@ type AIClient struct {
 }
 
 // NewAIClient targets the AI service from config.json, or the full
-// TASMIA_AI_URL when set. Render uses the latter for its public HTTPS
-// service URL. A bind host of 0.0.0.0 is normalized to 127.0.0.1
-// (0.0.0.0 is for listening, not for dialing).
+// TASMIA_AI_URL when set. Render uses the latter for the HF Space URL.
+// A bind host of 0.0.0.0 is normalized to 127.0.0.1 (0.0.0.0 is for
+// listening, not for dialing).
 func NewAIClient(host string, port int) *AIClient {
 	if url := strings.TrimRight(os.Getenv("TASMIA_AI_URL"), "/"); url != "" {
 		return &AIClient{
