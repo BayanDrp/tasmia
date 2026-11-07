@@ -1,3 +1,14 @@
+# Local AI service dependencies.
+# For a CPU-only install, use `make ai-setup`; it installs torch from the
+# PyTorch CPU index before installing this file.
+
 fastapi==0.115.6
 uvicorn==0.34.0
 python-multipart==0.0.20
+
+torch
+transformers==5.20.2
+peft
+soundfile
+numpy
+scipy

@@ -2,6 +2,7 @@
 # Run `make` alone to see the list.
 
 TASMIA_VENV ?= /tmp/opencode/warsh-venv
+export TASMIA_VENV
 
 .PHONY: help test web-test web-golden web-run ai-setup ai-run
 
@@ -22,7 +23,7 @@ web-run: ## start the web backend on :8080
 
 ai-setup: ## create the torch venv + install the service deps
 	bash tools/setup_venv.sh
-	$(TASMIA_VENV)/bin/python -m pip install -q peft soundfile fastapi "uvicorn[standard]" python-multipart
+	$(TASMIA_VENV)/bin/python -m pip install -q -r ai/requirements.txt
 	$(TASMIA_VENV)/bin/python -m pip install -q -e ./core
 
 ai-run: ## start the Python AI service on :7860
