@@ -1,4 +1,4 @@
-"""Judge a recitation: transcript in, per-word verdicts and score out.
+"""Judge a recitation: transcript in, per word verdicts and score out.
 
 The conductor: this file only orchestrates core calls (mushaf lookup,
 alignment, session building); all intelligence lives in core.
@@ -24,7 +24,7 @@ def evaluate(
     mode: kinds_checks = kinds_checks.without_tashkeel,
     model: str = "",
 ) -> dict:
-    """Judge a recitation: expected mushaf words in, per-word verdicts and score out."""
+    """Judge a recitation: expected mushaf words in, per word verdicts and score out."""
     expected = QURAN.expected_words(surah, ayah_from, ayah_to, include_basmala=False)
 
     # The base alignment always compares stripped forms. The checked

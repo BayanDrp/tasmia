@@ -164,7 +164,7 @@ def tokenize(text: str) -> list[str]:
 
 
 def normalize(text: str) -> str:
-    """Backward-compatible alias for normalize_text()."""
+    """Backward compatible alias for normalize_text()."""
     return normalize_text(text)
 
 
