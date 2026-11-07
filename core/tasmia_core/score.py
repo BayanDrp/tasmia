@@ -107,9 +107,3 @@ def build_session_result(
         model=model,
         latency_ms=latency_ms,
     )
-
-
-def session_to_dict(session: SessionResult) -> dict:
-    """Convenience alias for :meth:`SessionResult.to_dict`."""
-
-    return session.to_dict()

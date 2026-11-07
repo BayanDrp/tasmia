@@ -33,16 +33,6 @@ ALL_STATUSES: tuple[str, ...] = (
     STATUS_EXTRA,
 )
 
-#: The statuses that can be attached to an expected word.
-WORD_STATUSES: tuple[str, ...] = (
-    STATUS_OK,
-    STATUS_MISSING,
-    STATUS_WRONG,
-    STATUS_MISPRONOUNCED,
-    STATUS_REPEATED,
-    STATUS_UNCERTAIN,
-)
-
 
 def empty_counts() -> dict[str, int]:
     """Return a counts dictionary containing every known status."""
@@ -75,15 +65,6 @@ class Word:
     ayah: int
     index: int
 
-    def to_dict(self) -> dict:
-        return {
-            "text": self.text,
-            "normalized": self.normalized,
-            "surah": self.surah,
-            "ayah": self.ayah,
-            "index": self.index,
-        }
-
 
 @dataclass(frozen=True, slots=True)
 class HeardWord:
@@ -94,15 +75,6 @@ class HeardWord:
     start: float = 0.0
     end: float = 0.0
     probability: float = 1.0
-
-    def to_dict(self) -> dict:
-        return {
-            "text": self.text,
-            "normalized": self.normalized,
-            "start": self.start,
-            "end": self.end,
-            "probability": self.probability,
-        }
 
 
 # ---------------------------------------------------------------------------
@@ -179,14 +151,6 @@ class AlignResult:
     extras: list[ExtraResult]
     expected_count: int
     heard_count: int
-
-    def to_dict(self) -> dict:
-        return {
-            "expected_count": self.expected_count,
-            "heard_count": self.heard_count,
-            "words": [word.to_dict() for word in self.words],
-            "extras": [extra.to_dict() for extra in self.extras],
-        }
 
 
 @dataclass(slots=True)
